@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
- ALL SERVICES, ESSENTIAL INFO, AND COST
 -----------------------------------------------------------------------
-Scans ALL AWS services in your region, shows:
+Scans ALL AWS services 
 - Resource Name
 - Resource Type
 - Essential Details
 - Monthly Cost (aggregated in a separate sheet)
+
+
 """
 
 import pandas as pd
@@ -16,7 +17,8 @@ from botocore.exceptions import ClientError
 import sys
 
 # ----------- CONFIG ---------------------------------------------------
-REGION = "us-east-2"  # Change to your desired region
+
+REGION = "us-east-2"
 # -----------------------------------------------------------------------------
 
 class ComprehensiveAWSScanner:
@@ -32,10 +34,10 @@ class ComprehensiveAWSScanner:
             )
             self.region = REGION
             self.all_resources = []
-            self.costs_data = [] # New list to store cost data
+            self.costs_data = []
             self.account_id = self._get_account_id()
             print(f"✅ Scanning AWS Account ID: {self.account_id}")
-            print(f"✅ Scanning ALL AWS services in : {self.region}")
+            print(f"✅ Scanning ALL AWS services in: {self.region}")
         except Exception as e:
             print(f"❌ Failed to initialize: {e}")
             raise
@@ -43,7 +45,8 @@ class ComprehensiveAWSScanner:
     def _get_account_id(self):
         """Retrieves the AWS account ID using STS get_caller_identity."""
         try:
-            sts = self.session.client('sts')
+            # Added verify=False to bypass SSL check for STS client
+            sts = self.session.client('sts', verify=False)
             identity = sts.get_caller_identity()
             return identity.get('Account', 'Unknown')
         except Exception as e:
@@ -77,7 +80,8 @@ class ComprehensiveAWSScanner:
         print("💰 Fetching monthly cost data...")
         costs = []
         try:
-            ce_client = self.session.client('ce', region_name='us-east-1')
+            # Added verify=False to bypass SSL check for Cost Explorer client
+            ce_client = self.session.client('ce', region_name='us-east-1', verify=False)
 
             # Define time period for the last full month
             end_date = datetime.now().replace(day=1).strftime('%Y-%m-%d')
@@ -103,7 +107,7 @@ class ComprehensiveAWSScanner:
                     amount = float(group['Metrics']['UnblendedCost']['Amount'])
                     unit = group['Metrics']['UnblendedCost']['Unit']
                     
-                  
+                    
                     if region == self.region:
                          costs.append({
                              'Service': service,
@@ -196,7 +200,8 @@ class ComprehensiveAWSScanner:
         """EC2 - Only instances and volumes"""
         try:
             print("📊 Scanning EC2...")
-            ec2 = self.session.client('ec2', region_name=self.region)
+            # Added verify=False
+            ec2 = self.session.client('ec2', region_name=self.region, verify=False)
             
             # EC2 Instances only
             response = ec2.describe_instances()
@@ -222,7 +227,8 @@ class ComprehensiveAWSScanner:
         """ECR - Repositories"""
         try:
             print("📊 Scanning ECR...")
-            ecr = self.session.client('ecr', region_name=self.region)
+            # Added verify=False
+            ecr = self.session.client('ecr', region_name=self.region, verify=False)
             
             # Repositories
             response = ecr.describe_repositories()
@@ -238,7 +244,8 @@ class ComprehensiveAWSScanner:
         """Lambda Functions"""
         try:
             print("📊 Scanning Lambda...")
-            lambda_client = self.session.client('lambda', region_name=self.region)
+            # Added verify=False
+            lambda_client = self.session.client('lambda', region_name=self.region, verify=False)
             
             response = lambda_client.list_functions()
             for func in response.get('Functions', []):
@@ -253,7 +260,8 @@ class ComprehensiveAWSScanner:
         """ECS Clusters and Services"""
         try:
             print("📊 Scanning ECS...")
-            ecs = self.session.client('ecs', region_name=self.region)
+            # Added verify=False
+            ecs = self.session.client('ecs', region_name=self.region, verify=False)
             
             # Clusters
             response = ecs.list_clusters()
@@ -277,7 +285,8 @@ class ComprehensiveAWSScanner:
         """EKS Clusters"""
         try:
             print("📊 Scanning EKS...")
-            eks = self.session.client('eks', region_name=self.region)
+            # Added verify=False
+            eks = self.session.client('eks', region_name=self.region, verify=False)
             
             response = eks.list_clusters()
             for cluster_name in response.get('clusters', []):
@@ -290,7 +299,8 @@ class ComprehensiveAWSScanner:
         """AWS Batch"""
         try:
             print("📊 Scanning Batch...")
-            batch = self.session.client('batch', region_name=self.region)
+            # Added verify=False
+            batch = self.session.client('batch', region_name=self.region, verify=False)
             
             # Job Queues
             response = batch.describe_job_queues()
@@ -305,7 +315,8 @@ class ComprehensiveAWSScanner:
         """S3 Buckets"""
         try:
             print("📊 Scanning S3...")
-            s3 = self.session.client('s3', region_name='us-east-1')  # S3 is global
+            # Added verify=False
+            s3 = self.session.client('s3', region_name='us-east-1', verify=False)  # S3 is global
             
             response = s3.list_buckets()
             for bucket in response.get('Buckets', []):
@@ -319,7 +330,8 @@ class ComprehensiveAWSScanner:
         """EFS File Systems"""
         try:
             print("📊 Scanning EFS...")
-            efs = self.session.client('efs', region_name=self.region)
+            # Added verify=False
+            efs = self.session.client('efs', region_name=self.region, verify=False)
             
             response = efs.describe_file_systems()
             for fs in response.get('FileSystems', []):
@@ -335,7 +347,8 @@ class ComprehensiveAWSScanner:
         """FSx File Systems"""
         try:
             print("📊 Scanning FSx...")
-            fsx = self.session.client('fsx', region_name=self.region)
+            # Added verify=False
+            fsx = self.session.client('fsx', region_name=self.region, verify=False)
             
             response = fsx.describe_file_systems()
             for fs in response.get('FileSystems', []):
@@ -351,7 +364,8 @@ class ComprehensiveAWSScanner:
         """RDS Instances and Clusters"""
         try:
             print("📊 Scanning RDS...")
-            rds = self.session.client('rds', region_name=self.region)
+            # Added verify=False
+            rds = self.session.client('rds', region_name=self.region, verify=False)
             
             # RDS Instances
             response = rds.describe_db_instances()
@@ -374,7 +388,8 @@ class ComprehensiveAWSScanner:
         """DynamoDB Tables"""
         try:
             print("📊 Scanning DynamoDB...")
-            dynamodb = self.session.client('dynamodb', region_name=self.region)
+            # Added verify=False
+            dynamodb = self.session.client('dynamodb', region_name=self.region, verify=False)
             
             response = dynamodb.list_tables()
             for table_name in response.get('TableNames', []):
@@ -394,7 +409,8 @@ class ComprehensiveAWSScanner:
         """ElastiCache Clusters"""
         try:
             print("📊 Scanning ElastiCache...")
-            elasticache = self.session.client('elasticache', region_name=self.region)
+            # Added verify=False
+            elasticache = self.session.client('elasticache', region_name=self.region, verify=False)
             
             # Cache Clusters
             response = elasticache.describe_cache_clusters()
@@ -417,7 +433,8 @@ class ComprehensiveAWSScanner:
         """Redshift Clusters"""
         try:
             print("📊 Scanning Redshift...")
-            redshift = self.session.client('redshift', region_name=self.region)
+            # Added verify=False
+            redshift = self.session.client('redshift', region_name=self.region, verify=False)
             
             response = redshift.describe_clusters()
             for cluster in response.get('Clusters', []):
@@ -432,7 +449,8 @@ class ComprehensiveAWSScanner:
         """DocumentDB Clusters"""
         try:
             print("📊 Scanning DocumentDB...")
-            docdb = self.session.client('docdb', region_name=self.region)
+            # Added verify=False
+            docdb = self.session.client('docdb', region_name=self.region, verify=False)
             
             response = docdb.describe_db_clusters()
             for cluster in response.get('DBClusters', []):
@@ -447,7 +465,8 @@ class ComprehensiveAWSScanner:
         """Neptune Clusters"""
         try:
             print("📊 Scanning Neptune...")
-            neptune = self.session.client('neptune', region_name=self.region)
+            # Added verify=False
+            neptune = self.session.client('neptune', region_name=self.region, verify=False)
             
             response = neptune.describe_db_clusters()
             for cluster in response.get('DBClusters', []):
@@ -462,7 +481,8 @@ class ComprehensiveAWSScanner:
         """Load Balancers"""
         try:
             print("📊 Scanning Load Balancers...")
-            elbv2 = self.session.client('elbv2', region_name=self.region)
+            # Added verify=False
+            elbv2 = self.session.client('elbv2', region_name=self.region, verify=False)
             
             response = elbv2.describe_load_balancers()
             for lb in response.get('LoadBalancers', []):
@@ -477,7 +497,8 @@ class ComprehensiveAWSScanner:
         """API Gateway"""
         try:
             print("📊 Scanning API Gateway...")
-            apigateway = self.session.client('apigateway', region_name=self.region)
+            # Added verify=False
+            apigateway = self.session.client('apigateway', region_name=self.region, verify=False)
             
             response = apigateway.get_rest_apis()
             for api in response.get('items', []):
@@ -492,7 +513,8 @@ class ComprehensiveAWSScanner:
         """CloudFront Distributions"""
         try:
             print("📊 Scanning CloudFront...")
-            cloudfront = self.session.client('cloudfront', region_name='us-east-1')
+            # Added verify=False
+            cloudfront = self.session.client('cloudfront', region_name='us-east-1', verify=False)
             
             response = cloudfront.list_distributions()
             distributions = response.get('DistributionList', {}).get('Items', [])
@@ -508,7 +530,8 @@ class ComprehensiveAWSScanner:
         """Route53 Hosted Zones"""
         try:
             print("📊 Scanning Route53...")
-            route53 = self.session.client('route53', region_name='us-east-1')
+            # Added verify=False
+            route53 = self.session.client('route53', region_name='us-east-1', verify=False)
             
             response = route53.list_hosted_zones()
             for zone in response.get('HostedZones', []):
@@ -523,7 +546,8 @@ class ComprehensiveAWSScanner:
         """SNS Topics"""
         try:
             print("📊 Scanning SNS...")
-            sns = self.session.client('sns', region_name=self.region)
+            # Added verify=False
+            sns = self.session.client('sns', region_name=self.region, verify=False)
             
             response = sns.list_topics()
             for topic in response.get('Topics', []):
@@ -537,7 +561,8 @@ class ComprehensiveAWSScanner:
         """SQS Queues"""
         try:
             print("📊 Scanning SQS...")
-            sqs = self.session.client('sqs', region_name=self.region)
+            # Added verify=False
+            sqs = self.session.client('sqs', region_name=self.region, verify=False)
             
             response = sqs.list_queues()
             for queue_url in response.get('QueueUrls', []):
@@ -551,7 +576,8 @@ class ComprehensiveAWSScanner:
         """Amazon MQ Brokers"""
         try:
             print("📊 Scanning MQ...")
-            mq = self.session.client('mq', region_name=self.region)
+            # Added verify=False
+            mq = self.session.client('mq', region_name=self.region, verify=False)
             
             response = mq.list_brokers()
             for broker in response.get('BrokerSummaries', []):
@@ -566,7 +592,8 @@ class ComprehensiveAWSScanner:
         """Kinesis Streams"""
         try:
             print("📊 Scanning Kinesis...")
-            kinesis = self.session.client('kinesis', region_name=self.region)
+            # Added verify=False
+            kinesis = self.session.client('kinesis', region_name=self.region, verify=False)
             
             response = kinesis.list_streams()
             for stream_name in response.get('StreamNames', []):
@@ -579,7 +606,8 @@ class ComprehensiveAWSScanner:
         """EMR Clusters"""
         try:
             print("📊 Scanning EMR...")
-            emr = self.session.client('emr', region_name=self.region)
+            # Added verify=False
+            emr = self.session.client('emr', region_name=self.region, verify=False)
             
             response = emr.list_clusters()
             for cluster in response.get('Clusters', []):
@@ -594,7 +622,8 @@ class ComprehensiveAWSScanner:
         """AWS Glue"""
         try:
             print("📊 Scanning Glue...")
-            glue = self.session.client('glue', region_name=self.region)
+            # Added verify=False
+            glue = self.session.client('glue', region_name=self.region, verify=False)
             
             # Databases
             response = glue.get_databases()
@@ -610,7 +639,8 @@ class ComprehensiveAWSScanner:
         """Athena Workgroups"""
         try:
             print("📊 Scanning Athena...")
-            athena = self.session.client('athena', region_name=self.region)
+            # Added verify=False
+            athena = self.session.client('athena', region_name=self.region, verify=False)
             
             response = athena.list_work_groups()
             for wg in response.get('WorkGroups', []):
@@ -625,7 +655,8 @@ class ComprehensiveAWSScanner:
         """SageMaker"""
         try:
             print("📊 Scanning SageMaker...")
-            sagemaker = self.session.client('sagemaker', region_name=self.region)
+            # Added verify=False
+            sagemaker = self.session.client('sagemaker', region_name=self.region, verify=False)
             
             # Notebook Instances
             response = sagemaker.list_notebook_instances()
@@ -641,7 +672,8 @@ class ComprehensiveAWSScanner:
         """IAM Resources"""
         try:
             print("📊 Scanning IAM...")
-            iam = self.session.client('iam', region_name='us-east-1')
+            # Added verify=False
+            iam = self.session.client('iam', region_name='us-east-1', verify=False)
             
             # Users (limited to first 10)
             response = iam.list_users(MaxItems=10)
@@ -657,7 +689,8 @@ class ComprehensiveAWSScanner:
         """KMS Keys"""
         try:
             print("📊 Scanning KMS...")
-            kms = self.session.client('kms', region_name=self.region)
+            # Added verify=False
+            kms = self.session.client('kms', region_name=self.region, verify=False)
             
             response = kms.list_keys()
             for key in response.get('Keys', []):
@@ -678,7 +711,8 @@ class ComprehensiveAWSScanner:
         """Secrets Manager"""
         try:
             print("📊 Scanning Secrets Manager...")
-            secretsmanager = self.session.client('secretsmanager', region_name=self.region)
+            # Added verify=False
+            secretsmanager = self.session.client('secretsmanager', region_name=self.region, verify=False)
             
             response = secretsmanager.list_secrets()
             for secret in response.get('SecretList', []):
@@ -693,7 +727,8 @@ class ComprehensiveAWSScanner:
         """ACM Certificates"""
         try:
             print("📊 Scanning ACM...")
-            acm = self.session.client('acm', region_name=self.region)
+            # Added verify=False
+            acm = self.session.client('acm', region_name=self.region, verify=False)
             
             response = acm.list_certificates()
             for cert in response.get('CertificateSummaryList', []):
@@ -708,8 +743,9 @@ class ComprehensiveAWSScanner:
         """CloudWatch"""
         try:
             print("📊 Scanning CloudWatch...")
-            cloudwatch = self.session.client('cloudwatch', region_name=self.region)
-            logs = self.session.client('logs', region_name=self.region)
+            # Added verify=False
+            cloudwatch = self.session.client('cloudwatch', region_name=self.region, verify=False)
+            logs = self.session.client('logs', region_name=self.region, verify=False)
             
             # Alarms
             response = cloudwatch.describe_alarms()
@@ -732,7 +768,8 @@ class ComprehensiveAWSScanner:
         """CloudFormation Stacks"""
         try:
             print("📊 Scanning CloudFormation...")
-            cf = self.session.client('cloudformation', region_name=self.region)
+            # Added verify=False
+            cf = self.session.client('cloudformation', region_name=self.region, verify=False)
             
             response = cf.list_stacks()
             for stack in response.get('StackSummaries', []):
@@ -748,7 +785,8 @@ class ComprehensiveAWSScanner:
         """Systems Manager"""
         try:
             print("📊 Scanning Systems Manager...")
-            ssm = self.session.client('ssm', region_name=self.region)
+            # Added verify=False
+            ssm = self.session.client('ssm', region_name=self.region, verify=False)
             
             # Parameters (first 20)
             response = ssm.describe_parameters(MaxResults=20)
@@ -764,7 +802,8 @@ class ComprehensiveAWSScanner:
         """AWS Config"""
         try:
             print("📊 Scanning Config...")
-            config = self.session.client('config', region_name=self.region)
+            # Added verify=False
+            config = self.session.client('config', region_name=self.region, verify=False)
             
             response = config.describe_configuration_recorders()
             for recorder in response.get('ConfigurationRecorders', []):
@@ -779,7 +818,8 @@ class ComprehensiveAWSScanner:
         """CodeCommit Repositories"""
         try:
             print("📊 Scanning CodeCommit...")
-            codecommit = self.session.client('codecommit', region_name=self.region)
+            # Added verify=False
+            codecommit = self.session.client('codecommit', region_name=self.region, verify=False)
             
             response = codecommit.list_repositories()
             for repo in response.get('repositories', []):
@@ -794,7 +834,8 @@ class ComprehensiveAWSScanner:
         """CodeBuild Projects"""
         try:
             print("📊 Scanning CodeBuild...")
-            codebuild = self.session.client('codebuild', region_name=self.region)
+            # Added verify=False
+            codebuild = self.session.client('codebuild', region_name=self.region, verify=False)
             
             response = codebuild.list_projects()
             for project_name in response.get('projects', []):
@@ -807,7 +848,8 @@ class ComprehensiveAWSScanner:
         """CodeDeploy Applications"""
         try:
             print("📊 Scanning CodeDeploy...")
-            codedeploy = self.session.client('codedeploy', region_name=self.region)
+            # Added verify=False
+            codedeploy = self.session.client('codedeploy', region_name=self.region, verify=False)
             
             response = codedeploy.list_applications()
             for app_name in response.get('applications', []):
@@ -820,7 +862,8 @@ class ComprehensiveAWSScanner:
         """CodePipeline Pipelines"""
         try:
             print("📊 Scanning CodePipeline...")
-            codepipeline = self.session.client('codepipeline', region_name=self.region)
+            # Added verify=False
+            codepipeline = self.session.client('codepipeline', region_name=self.region, verify=False)
             
             response = codepipeline.list_pipelines()
             for pipeline in response.get('pipelines', []):
@@ -835,7 +878,8 @@ class ComprehensiveAWSScanner:
         """IoT Things"""
         try:
             print("📊 Scanning IoT...")
-            iot = self.session.client('iot', region_name=self.region)
+            # Added verify=False
+            iot = self.session.client('iot', region_name=self.region, verify=False)
             
             response = iot.list_things()
             for thing in response.get('things', []):
@@ -849,7 +893,7 @@ class ComprehensiveAWSScanner:
     def print_summary(self):
         """Print comprehensive summary"""
         print("\n" + "="*80)
-        print("🎯 COMPREHENSIVE AWS INVENTORY - ALL SERVICES")
+        print("🎯 COMPREHENSIVE AWS  INVENTORY - ALL SERVICES")
         print("="*80)
 
         if not self.all_resources:
@@ -945,6 +989,7 @@ if __name__ == "__main__":
         print(f"\n🎉 SUCCESS!")
         print(f"📊 Total resources: {len(scanner.all_resources)}")
         print(f"📁 Excel file: {excel_file}")
+       
         print(f"🔍 Coverage: ALL AWS services, essential info only")
         
     except KeyboardInterrupt:
